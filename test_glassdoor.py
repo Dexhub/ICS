@@ -64,14 +64,12 @@ def parse(url_to_parse):
         nl = site_name + a
         if nl not in url_list:
             url_list.append(nl)
-
-#    print next_links.__dict__
-#    g_data = soup.find_all('a', {"class": "item org emphasizedLink"}) 
-    #for nlink in next_links:
-    #    print nlink.__dict__
-
     
-    
+    Companies = soup.find_all('a', {"class": "item org emphasizedLink"}) 
+    Ratings = soup.find_all("span", {"class": "gdRatingValueBar"})
+    for i in range(0,len(Companies)):
+        if(float(Ratings[i].text) > 4):
+            print "> %s %s" % (Companies[i].text,Ratings[i].text)
 
 def main():
     url = "http://www.glassdoor.com/Reviews/information-technology-reviews-SRCH_II10013.0,22.htm"
