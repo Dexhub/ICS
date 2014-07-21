@@ -20,21 +20,6 @@ def parse_url(url):
     for data in rating_data:
         print data.text
 
-
-#
-##Extracting the rating:                                                         
-#print "--"*5
-##url = raw_input("Pilease enter a website name")                                
-#url = "http://www.glassdoor.com/Reviews/information-technology-reviews-SRCH_II10013.0,22"
-#next_url = "_IP"
-#
-#print "#"*20
-#for N in range(2, 3):
-#    search_url = "%s%s%d.htm" %(url,next_url,N)
-#    print search_url
-#    parse_url(search_url)
-#print "#"*20
-#
 def begin_parsing(init_url, minimum):
 
     '''
