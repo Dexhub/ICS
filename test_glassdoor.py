@@ -35,7 +35,7 @@ def parse_url(url):
 #    parse_url(search_url)
 #print "#"*20
 #
-def begin_parsing(init_url):
+def begin_parsing(init_url, minimum):
 
     '''
     Parse the main url and add the links in the list
@@ -49,12 +49,12 @@ def begin_parsing(init_url):
     while counter < len(url_list):
         url_to_parse = url_list[counter]
         counter = counter + 1
-        parse(url_to_parse)
+        parse(url_to_parse, minimum)
 
     print "-"*10
     print url_list 
 
-def parse(url_to_parse):
+def parse(url_to_parse, minimum):
     global url_list
     r = requests.get(url_to_parse)                                                           
     soup = BeautifulSoup(r.content)
@@ -68,12 +68,13 @@ def parse(url_to_parse):
     Companies = soup.find_all('a', {"class": "item org emphasizedLink"}) 
     Ratings = soup.find_all("span", {"class": "gdRatingValueBar"})
     for i in range(0,len(Companies)):
-        if(float(Ratings[i].text) > 4):
+        if(float(Ratings[i].text) > minimum):
             print "> %s %s" % (Companies[i].text,Ratings[i].text)
 
 def main():
     url = "http://www.glassdoor.com/Reviews/information-technology-reviews-SRCH_II10013.0,22.htm"
-    begin_parsing(url)
+    minimum = input("What is the minimum rating of the companies you are searching for:")
+    begin_parsing(url, minimum)
 
 #http://www.glassdoor.com/Reviews/information-technology-company-reviews-SRCH_II10013.0,22_IP3.htm
 
