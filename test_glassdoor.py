@@ -6,6 +6,7 @@ import xlsxwriter
 url_list = []
 site_name = "http://www.glassdoor.com"
 counter = 0
+worksheet = None
 
 def begin_parsing(init_url, minimum):
 
@@ -13,12 +14,23 @@ def begin_parsing(init_url, minimum):
     Parse the main url and add the links in the list
     Store the parsed data and call parsing until list is empty
     '''
-    global url_list
+    global url_list, worksheet
     url_list.append(init_url)
-
+    
+    ## Write Data to Excel Sheet ##
+    workbook = xlsxwriter.Workbook('demo.xlsx')
+    worksheet = workbook.add_worksheet()
+    bold = workbook.add_format({'bold': True})
+    # Writing Columns
+    worksheet.write('A1', 'No', bold)
+    worksheet.write('B1', 'Company Name', bold)
+    worksheet.write('C1', 'Rating', bold)
+    worksheet.write('D1', 'HeadQuater', bold)
+    worksheet.write('E1', 'CEO', bold)
+    worksheet.write('F1', 'CEO Approval', bold)
 
     counter = 0
-    while counter < len(url_list):
+    while (counter < 5):
         url_to_parse = url_list[counter]
         counter = counter + 1
         parse(url_to_parse, minimum)
@@ -26,9 +38,10 @@ def begin_parsing(init_url, minimum):
     print "-"*20
     print "Total number of results returned : %d" % (counter)
     print "-"*20
+    workbook.close()
 
 def parse(url_to_parse, minimum):
-    global url_list
+    global url_list, worksheet
     r = requests.get(url_to_parse)                                                           
     soup = BeautifulSoup(r.content)
     next_links = soup.find_all('li', {"class": "page notranslate"})
@@ -53,34 +66,46 @@ def parse(url_to_parse, minimum):
 
     # Founding Date: Growth %
 
-    ## Write Data to Excel Sheet ##
-    workbook = xlsxwriter.Workbook('demo.xlsx')
-    worksheet = workbook.add_worksheet()
-    bold = workbook.add_format({'bold': True})
-    # Writing Columns
-    worksheet.write('A1', 'No', bold)
-    worksheet.write('B1', 'Company Name', bold)
-    worksheet.write('C1', 'Rating', bold)
-    worksheet.write('D1', 'HeadQuater', bold)
-    worksheet.write('E1', 'CEO', bold)
-    worksheet.write('F1', 'CEO Approval', bold)
-    workbook.close()
     ###############################
     global counter
     for i in range(0,len(Companies)):
         if(float(Ratings[i].text) > minimum):
             counter = counter + 1
-            print "%d %s %s %s %s %s " % \
-                    (counter, Companies[i].text,\
+            try:
+                print "%d %s %s %s %s %s " % \
+                    (counter,\
+                     Companies[i].text,\
                      Ratings[i].text,\
                      HeadQuaters[i].find("span", {"class" : "value i-loc"}).text,\
                      CEOs[i].find("span", {"class":"fn notranslate"}).text,\
-                     CEOs[i].find("span", {"class": "approvalPercent"}).text)
-#            worksheet.write(i-1, 0, Companies[i].text)
-#            worksheet.write(i-1, 1, Ratings[i].text)
-#            worksheet.write(i-1, 2, HeadQuaters[i].text)
-#            worksheet.write(i-1, 3, CEOs[i].text)
-#            worksheet.write(i-1, 4, 'A5', 'CEO Approval', bold)
+                     CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
+            except:
+                pass
+
+            worksheet.write(counter, 0, counter)
+            worksheet.write(counter, 1, Companies[i].text)
+            
+            
+            try:
+                worksheet.write(counter, 2, Ratings[i].text)
+            except:
+                worksheet.write(counter, 2, "unknown")
+
+            try:
+                worksheet.write(counter, 3, HeadQuaters[i].find("span", {"class" : "value i-loc"}).text)
+            except:
+                worksheet.write(counter, 3, "unkown")
+            
+            try:
+                worksheet.write(counter, 4, CEOs[i].find("span", {"class":"fn notranslate"}).text)
+            except:
+                worksheet.write(counter, 4, "unknown")
+
+            try:
+                worksheet.write(counter, 5, CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
+            except:
+                worksheet.write(counter, 5, "0")
+
                                      
 
 def main():
