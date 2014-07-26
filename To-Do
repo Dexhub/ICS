@@ -1,0 +1,14 @@
+---------------------
+|####### TODO ######|
+---------------------
+- Simple Database connection for storing and retrieving basic company
+- Logic to get further information using Glassdoor API
+- Save the extra information obtained using Glassdoor API
+- Look into how to get information on the jobs available using glassdoor API
+- Work on the Front End part of the project
+- Analytics
+- Refine UI
+- Deployment
+
+
+

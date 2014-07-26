@@ -10,9 +10,14 @@ class Database(object):
         db = client.glassdoordb
         Database.company_data = glassdoordb.company_data # creating a collection for company_data
 
-    def store():
+    def store(company):
         ''' store the values set in the company_data object into the database '''
-        pass
+        company_data.insert( \
+                           { name : company.name, \
+                             rating : company.rating, \
+                             HQ : company.HQ, \
+                           } \
+                           )
 
     def query_rating():
         ''' query companies based on their ratings '''

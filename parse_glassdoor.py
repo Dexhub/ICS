@@ -2,46 +2,41 @@ from bs4 import BeautifulSoup
 import requests
 import xlsxwriter
 from config import *
+import sys
+import pyprind as ppr
+from database_module import Database
 
 ## Global list of urls to be parsed
 url_list = []
 counter = 0
 worksheet = None
+db = None
 
-def begin_parsing(init_url, minimum):
-
+def generate_urls(init_url):
     '''
     Parse the main url and add the links in the list
     Store the parsed data and call parsing until list is empty
     '''
-    global url_list, worksheet
+    global url_list
     url_list.append(init_url)
-    
-    ## Write Data to Excel Sheet ##
-    workbook = xlsxwriter.Workbook(EXCEL_FILE)
-    worksheet = workbook.add_worksheet()
-    bold = workbook.add_format({'bold': True})
-    # Writing Columns
-    worksheet.write('A1', 'No', bold)
-    worksheet.write('B1', 'Company Name', bold)
-    worksheet.write('C1', 'Rating', bold)
-    worksheet.write('D1', 'HeadQuater', bold)
-    worksheet.write('E1', 'CEO', bold)
-    worksheet.write('F1', 'CEO Approval', bold)
 
     counter = 0
     while (counter < len(url_list)):
         url_to_parse = url_list[counter]
         counter = counter + 1
-        parse(url_to_parse, minimum)
+        if (counter > 5):
+            break
+        extract_urls(url_to_parse)
+        print('#'),
+        sys.stdout.flush()
 
     print "-"*20
     print "Total number of results returned : %d" % (counter)
     print "-"*20
-    workbook.close()
 
-def parse(url_to_parse, minimum):
-    global url_list, worksheet
+def extract_urls(url_to_parse):
+    ''' Generate only the list of URLs to be parsed. This would help in creating a progress bar.'''
+    #TODO Use Soup Strainer
     r = requests.get(url_to_parse)                                                           
     soup = BeautifulSoup(r.content)
     next_links = soup.find_all('li', {"class": "page notranslate"})
@@ -51,6 +46,17 @@ def parse(url_to_parse, minimum):
         if nl not in url_list:
             url_list.append(nl)
 
+def begin_data_extraction(minimum):
+    ''' Parse the url for actual data'''
+    global url_list
+    mbar = ppr.ProgBar(len(url_list))
+    for url in url_list:
+        parse(url, minimum)
+        mbar.update()
+
+def parse(url_to_parse, minimum):
+    r = requests.get(url_to_parse)                                                           
+    soup = BeautifulSoup(r.content)
     # Company Names
     Companies = soup.find_all('a', {"class": "item org emphasizedLink"}) 
     
@@ -71,45 +77,26 @@ def parse(url_to_parse, minimum):
     for i in range(0,len(Companies)):
         if(float(Ratings[i].text) > minimum):
             counter = counter + 1
+            '''
             try:
-                print "%d %s %s %s %s %s " % \
-                    (counter,\
-                     Companies[i].text,\
-                     Ratings[i].text,\
-                     HeadQuaters[i].find("span", {"class" : "value i-loc"}).text,\
-                     CEOs[i].find("span", {"class":"fn notranslate"}).text,\
-                     CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
+               print "%d %s %s %s %s %s " % \
+                   (counter,\
+                    Companies[i].text,\
+                    Ratings[i].text,\
+                    HeadQuaters[i].find("span", {"class" : "value i-loc"}).text,\
+                    CEOs[i].find("span", {"class":"fn notranslate"}).text,\
+                    CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
             except:
                 pass
-
-            worksheet.write(counter, 0, counter)
-            worksheet.write(counter, 1, Companies[i].text)
-            
-            
-            try:
-                worksheet.write(counter, 2, Ratings[i].text)
-            except:
-                worksheet.write(counter, 2, "unknown")
-
-            try:
-                worksheet.write(counter, 3, HeadQuaters[i].find("span", {"class" : "value i-loc"}).text)
-            except:
-                worksheet.write(counter, 3, "unkown")
-            
-            try:
-                worksheet.write(counter, 4, CEOs[i].find("span", {"class":"fn notranslate"}).text)
-            except:
-                worksheet.write(counter, 4, "unknown")
-
-            try:
-                worksheet.write(counter, 5, CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
-            except:
-                worksheet.write(counter, 5, "0")
-
-                                     
+            '''
 
 def main():
+    global db
     url = SEED_URL
     minimum = input("What is the minimum rating of the companies you are searching for:")
-    begin_parsing(url, minimum)
+    generate_urls(url)
+    db = Database()
+
+    print "Finished Generating URLS"
+    begin_data_extraction(minimum)
 main()
