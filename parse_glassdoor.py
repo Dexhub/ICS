@@ -1,10 +1,10 @@
 from bs4 import BeautifulSoup
 import requests
 import xlsxwriter
+from config import *
 
 ## Global list of urls to be parsed
 url_list = []
-site_name = "http://www.glassdoor.com"
 counter = 0
 worksheet = None
 
@@ -18,7 +18,7 @@ def begin_parsing(init_url, minimum):
     url_list.append(init_url)
     
     ## Write Data to Excel Sheet ##
-    workbook = xlsxwriter.Workbook('demo.xlsx')
+    workbook = xlsxwriter.Workbook(EXCEL_FILE)
     worksheet = workbook.add_worksheet()
     bold = workbook.add_format({'bold': True})
     # Writing Columns
@@ -47,7 +47,7 @@ def parse(url_to_parse, minimum):
     next_links = soup.find_all('li', {"class": "page notranslate"})
     for nl in next_links:
         a = nl.find('a')['href']
-        nl = site_name + a
+        nl = BASE_SITE + a
         if nl not in url_list:
             url_list.append(nl)
 
@@ -109,10 +109,7 @@ def parse(url_to_parse, minimum):
                                      
 
 def main():
-    url = "http://www.glassdoor.com/Reviews/information-technology-reviews-SRCH_II10013.0,22.htm"
+    url = SEED_URL
     minimum = input("What is the minimum rating of the companies you are searching for:")
     begin_parsing(url, minimum)
-
-#http://www.glassdoor.com/Reviews/information-technology-company-reviews-SRCH_II10013.0,22_IP3.htm
-
 main()
