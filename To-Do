@@ -1,5 +1,5 @@
 ---------------------
-|####### TODO ######|
+####### TODO ######
 ---------------------
 - Simple Database connection for storing and retrieving basic company
 - Logic to get further information using Glassdoor API
