@@ -4,7 +4,8 @@ import xlsxwriter
 from config import *
 import sys
 import pyprind as ppr
-from database_module import Database
+from database import Database
+from company_data import Company_data
 
 ## Global list of urls to be parsed
 url_list = []
@@ -24,7 +25,7 @@ def generate_urls(init_url):
     while (counter < len(url_list)):
         url_to_parse = url_list[counter]
         counter = counter + 1
-        if (counter > 5):
+        if (counter > 2):
             break
         extract_urls(url_to_parse)
         print('#'),
@@ -49,10 +50,10 @@ def extract_urls(url_to_parse):
 def begin_data_extraction(minimum):
     ''' Parse the url for actual data'''
     global url_list
-    mbar = ppr.ProgBar(len(url_list))
+    #mbar = ppr.ProgBar(len(url_list))
     for url in url_list:
         parse(url, minimum)
-        mbar.update()
+        #mbar.update()
 
 def parse(url_to_parse, minimum):
     r = requests.get(url_to_parse)                                                           
@@ -71,29 +72,38 @@ def parse(url_to_parse, minimum):
     CEOs = soup.find_all("p", {"class": "ceoData"}) 
 
     # Founding Date: Growth %
+    #print "%d %d %d %d" % (len(Companies), len(Ratings), len(HeadQuaters), len(CEOs))
 
     ###############################
     global counter
     for i in range(0,len(Companies)):
         if(float(Ratings[i].text) > minimum):
             counter = counter + 1
-            '''
-            try:
-               print "%d %s %s %s %s %s " % \
-                   (counter,\
-                    Companies[i].text,\
-                    Ratings[i].text,\
-                    HeadQuaters[i].find("span", {"class" : "value i-loc"}).text,\
-                    CEOs[i].find("span", {"class":"fn notranslate"}).text,\
-                    CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1])
-            except:
-                pass
-            '''
+    try:
+        CEO = CEOs[i].find("span", {"class":"fn notranslate"}).text
+    except:
+        CEO = None
+
+    try:
+        approval = CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1]
+    except:
+        approval = None
+
+    
+    # Code to insert Data
+    Company = Company_data(Companies[i].text, \
+                           Companies[i].get('href'), \
+                           Ratings[i].text, \
+                           HeadQuaters[i].find("span", {"class" : "value i-loc"}).text, \
+                           CEO, \
+                           approval) 
+    db.store(Company)
+
 
 def main():
     global db
     url = SEED_URL
-    minimum = input("What is the minimum rating of the companies you are searching for:")
+    minimum = input("What is the minimum rating of the companies you are searching for: ")
     generate_urls(url)
     db = Database()
 

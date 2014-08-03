@@ -7,15 +7,19 @@ class Database(object):
     def __init__(self):
         ''' create a database if it does not exist and establish a connection '''
         client = MongoClient('localhost', 27017)
-        db = client.glassdoordb
-        Database.company_data = glassdoordb.company_data # creating a collection for company_data
+        db = client['glass']
+        Database.company_data = db.company_data # creating a collection for company_data
 
-    def store(company):
+    def store(this, company):
         ''' store the values set in the company_data object into the database '''
-        company_data.insert( \
-                           { name : company.name, \
-                             rating : company.rating, \
-                             HQ : company.HQ, \
+        Database.company_data.insert( \
+                           { "Name" : company.name, \
+                             "URL" : company.url, \
+                             "Rating" : company.rating, \
+                             "HQ city" : company.HQcity, \
+                             "HQ state" : company.HQstate, \
+                             "CEO" : company.CEO, \
+                             "Approval" : company.approval, \
                            } \
                            )
 
