@@ -10,7 +10,7 @@ class Company_data():
     def __init__(self, name, url, rating = "0", HQ = "unknown", CEO = "unknown", approval = 0):
         self.name = name
         self.url = BASE_SITE + url
-        print "URL : ", self.url
+        #print "URL : ", self.url
         self.rating = rating
         try:
             self.HQcity = HQ.split(',')[0].strip()
@@ -23,9 +23,10 @@ class Company_data():
         self.CEO = CEO
         self.approval = approval
 
-    def more_info():
-         info = get(self.name)
-         print info
+    def more_info(self):
+        more = get_more_info(self.url)
+        more.start()
+        more.join()
 
     def get_jobs():
         '''Get Jobs '''
@@ -41,15 +42,18 @@ class Company_data():
 
 
 class get_more_info(threading.Thread):
-    def __init__(self, name, url):
-        self.name = company_name
+    def __init__(self, url):
+        threading.Thread.__init__(self)
+        self.url = url
 
     def run(self):
         ''' Get all the job information and also get all office locations '''
-        r = requests.get(url_to_parse)                                                           
+        r = requests.get(self.url)                                                           
         soup = BeautifulSoup(r.content)
 
-        founded  = 
+        founded  = soup.find_all("div", {"id", "EmpBasicInfo"})
+        #print "Founded: ", founded
+        '''
         size =
         company_type = 
         company_industry = 
@@ -61,9 +65,7 @@ class get_more_info(threading.Thread):
         soup = 
         jobs_list = parse_all(self.name)
         locations = get_locations(jobs_list)
-
-
-
+        '''
 
 def parse_all(company_name):
     BASE_SITE = "http://www.glassdoor.com"

@@ -1,4 +1,4 @@
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, SoupStrainer
 import requests
 import xlsxwriter
 from config import *
@@ -25,10 +25,10 @@ def generate_urls(init_url):
     while (counter < len(url_list)):
         url_to_parse = url_list[counter]
         counter = counter + 1
-        if (counter > 2):
-            break
+        #if (counter > 10):
+        #    break
         extract_urls(url_to_parse)
-        print('#'),
+        print('->'),
         sys.stdout.flush()
 
     print "-"*20
@@ -39,7 +39,8 @@ def extract_urls(url_to_parse):
     ''' Generate only the list of URLs to be parsed. This would help in creating a progress bar.'''
     #TODO Use Soup Strainer
     r = requests.get(url_to_parse)                                                           
-    soup = BeautifulSoup(r.content)
+    only_footer_elements = SoupStrainer(id="FooterPageNav")
+    soup = BeautifulSoup(r.content, parse_only = only_footer_elements)
     next_links = soup.find_all('li', {"class": "page notranslate"})
     for nl in next_links:
         a = nl.find('a')['href']
@@ -50,10 +51,10 @@ def extract_urls(url_to_parse):
 def begin_data_extraction(minimum):
     ''' Parse the url for actual data'''
     global url_list
-    #mbar = ppr.ProgBar(len(url_list))
+    mbar = ppr.ProgBar(len(url_list))
     for url in url_list:
         parse(url, minimum)
-        #mbar.update()
+        mbar.update()
 
 def parse(url_to_parse, minimum):
     r = requests.get(url_to_parse)                                                           
@@ -79,25 +80,30 @@ def parse(url_to_parse, minimum):
     for i in range(0,len(Companies)):
         if(float(Ratings[i].text) > minimum):
             counter = counter + 1
-    try:
-        CEO = CEOs[i].find("span", {"class":"fn notranslate"}).text
-    except:
-        CEO = None
-
-    try:
-        approval = CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1]
-    except:
-        approval = None
-
+            try:
+                CEO = CEOs[i].find("span", {"class":"fn notranslate"}).text
+            except:
+                CEO = None
+            try:
+                HQ = HeadQuaters[i].find("span", {"class" : "value i-loc"}).text
+            except:
+                HQ = None
+        
+            try:
+                approval = CEOs[i].find("span", {"class": "approvalPercent"}).text[:-1]
+            except:
+                approval = None
+        
     
-    # Code to insert Data
-    Company = Company_data(Companies[i].text, \
-                           Companies[i].get('href'), \
-                           Ratings[i].text, \
-                           HeadQuaters[i].find("span", {"class" : "value i-loc"}).text, \
-                           CEO, \
-                           approval) 
-    db.store(Company)
+            # Code to insert Data
+            Company = Company_data(Companies[i].text, \
+                                   Companies[i].get('href'), \
+                                   Ratings[i].text, \
+                                   HQ, \
+                                   CEO, \
+                                   approval) 
+            db.store(Company)
+            Company.more_info()
 
 
 def main():
