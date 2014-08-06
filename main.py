@@ -56,7 +56,7 @@ def begin_data_extraction(minimum):
         parse(url, minimum)
         mbar.update()
 
-def parse(url_to_parse, minimum):
+def parse(url_to_parse, minimum = 0):
     r = requests.get(url_to_parse)                                                           
     soup = BeautifulSoup(r.content)
     # Company Names
@@ -98,7 +98,7 @@ def parse(url_to_parse, minimum):
             # Code to insert Data
             Company = Company_data(Companies[i].text, \
                                    Companies[i].get('href'), \
-                                   Ratings[i].text, \
+                                   Ratings[i].text.strip(), \
                                    HQ, \
                                    CEO, \
                                    approval) 
