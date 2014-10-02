@@ -1,6 +1,9 @@
 ####################################################
 Toy Project to experiment with beautiful soup.
 
-Idea: To Crawl glassdoor in search of upcoming startups
+Idea: Crawl glassdoor for good tech companies
+
+Run: sh run.sh
+Its gonna take some time(max 50 min to crawl entire glassdoor)
 
 ####################################################
