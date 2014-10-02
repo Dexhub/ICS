@@ -6,12 +6,19 @@ import sys
 import pyprind as ppr
 from database import Database
 from company_data import Company_data
+import signal
+import sys
+
 
 ## Global list of urls to be parsed
 url_list = []
 counter = 0
 worksheet = None
 db = None
+
+
+def signal_handler(signal, frame):
+    print ("You pressed Ctrl+ C")
 
 def generate_urls(init_url):
     '''
@@ -28,7 +35,7 @@ def generate_urls(init_url):
         #if (counter > 10):
         #    break
         extract_urls(url_to_parse)
-        print('->'),
+        print('.'),
         sys.stdout.flush()
 
     print "-"*20
@@ -109,10 +116,11 @@ def parse(url_to_parse, minimum = 0):
 def main():
     global db
     url = SEED_URL
+    signal.signal(signal.SIGINT, signal_handler) # Yet to implement
     minimum = input("What is the minimum rating of the companies you are searching for: ")
+    print "Parsing Glassdoor in Real time .... Please be Patient"
     generate_urls(url)
     db = Database()
-
     print "Finished Generating URLS"
     begin_data_extraction(minimum)
 main()
