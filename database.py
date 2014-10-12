@@ -22,6 +22,7 @@ class Database(object):
                              "Approval" : company.approval, \
                            } \
                            )
+        print "Stored 1 entry"
 
     def query_rating():
         ''' query companies based on their ratings '''

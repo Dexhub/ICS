@@ -1,0 +1,2 @@
+print application.get_connections()['values'][0]
+

@@ -19,6 +19,7 @@ db = None
 
 def signal_handler(signal, frame):
     print ("You pressed Ctrl+ C")
+    exit(0)
 
 def generate_urls(init_url):
     '''
@@ -32,8 +33,8 @@ def generate_urls(init_url):
     while (counter < len(url_list)):
         url_to_parse = url_list[counter]
         counter = counter + 1
-        #if (counter > 10):
-        #    break
+        if (counter > 4): #TODO
+            break   
         extract_urls(url_to_parse)
         print('.'),
         sys.stdout.flush()
