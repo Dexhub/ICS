@@ -8,13 +8,15 @@ from database import Database
 from company_data import Company_data
 import signal
 import sys
-
+from Queue import Queue
+from threading import Thread
 
 ## Global list of urls to be parsed
 url_list = []
 counter = 0
 worksheet = None
 db = None
+main_queue = None
 
 
 def signal_handler(signal, frame):
@@ -36,7 +38,7 @@ def generate_urls(init_url):
         if (counter > 4): #TODO
             break   
         extract_urls(url_to_parse)
-        print('.'),
+        print('>'),
         sys.stdout.flush()
 
     print "-"*20
@@ -46,6 +48,7 @@ def generate_urls(init_url):
 def extract_urls(url_to_parse):
     ''' Generate only the list of URLs to be parsed. This would help in creating a progress bar.'''
     #TODO Use Soup Strainer
+    global main_queue
     r = requests.get(url_to_parse)                                                           
     only_footer_elements = SoupStrainer(id="FooterPageNav")
     soup = BeautifulSoup(r.content, parse_only = only_footer_elements)
@@ -55,16 +58,20 @@ def extract_urls(url_to_parse):
         nl = BASE_SITE + a
         if nl not in url_list:
             url_list.append(nl)
+            main_queue.put(nl)
 
 def begin_data_extraction(minimum):
     ''' Parse the url for actual data'''
     global url_list
     mbar = ppr.ProgBar(len(url_list))
     for url in url_list:
-        parse(url, minimum)
+        parse(minimum)
+        #parse(url, minimum)
         mbar.update()
 
-def parse(url_to_parse, minimum = 0):
+def parse( minimum = 0):
+    global main_queue
+    url_to_parse = main_queue.get()
     r = requests.get(url_to_parse)                                                           
     soup = BeautifulSoup(r.content)
     # Company Names
@@ -84,7 +91,7 @@ def parse(url_to_parse, minimum = 0):
     #print "%d %d %d %d" % (len(Companies), len(Ratings), len(HeadQuaters), len(CEOs))
 
     ###############################
-    global counter
+    global counter,db
     for i in range(0,len(Companies)):
         if(float(Ratings[i].text) > minimum):
             counter = counter + 1
@@ -112,16 +119,23 @@ def parse(url_to_parse, minimum = 0):
                                    approval) 
             db.store(Company)
             Company.more_info()
+    main_queue.task_done()
 
 
 def main():
-    global db
+    global db, main_queue
     url = SEED_URL
     signal.signal(signal.SIGINT, signal_handler) # Yet to implement
+    db = Database()
+    main_queue = Queue()
+    for i in range(NUM_WORKER_THREADS):
+        t = Thread(target = parse)
+        t.daemon = True
+        t.start()
     minimum = input("What is the minimum rating of the companies you are searching for: ")
     print "Parsing Glassdoor in Real time .... Please be Patient"
     generate_urls(url)
-    db = Database()
     print "Finished Generating URLS"
-    begin_data_extraction(minimum)
+    main_queue.join()
+    #begin_data_extraction(minimum)
 main()
